@@ -5,11 +5,9 @@ const Intern = require('./lib/Intern');
 const fs = require('fs');
 const Questions = require('./lib/questions');
 const util = require('util');
+const moment = require('moment');
 
-const employees = [{role:"Manager",id:2,name:"3",email:"3",officeNumber:3},
-                    {role:"Engineer",id:2,name:"3",email:"3",github:"3"},
-                    {role:"Intern",id:2,name:"3",email:"3",school:"3"},
-];
+const employees = [];
 const employeeHTML = [];
 
 const readFileAsync = util.promisify(fs.readFile);
@@ -47,7 +45,7 @@ async function start(){
     let mainHTML = await readFileAsync('./templates/main.html','utf8');
     mainHTML = mainHTML.replace("##DATA",employeesHTML);
 
-    writeFileAsync('./output/team.html',mainHTML).then( err=>{
+    writeFileAsync(`./output/DevTeam_${moment().format("DD-MMM-YY_HHmm")}.html`,mainHTML).then( err=>{
         if(err){
             console.log(err);
         }
