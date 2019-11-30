@@ -6,7 +6,10 @@ const fs = require('fs');
 const Questions = require('./lib/questions');
 const util = require('util');
 
-const employees = [];
+const employees = [{role:"Manager",id:2,name:"3",email:"3",officeNumber:3},
+                    {role:"Engineer",id:2,name:"3",email:"3",github:"3"},
+                    {role:"Intern",id:2,name:"3",email:"3",school:"3"},
+];
 const employeeHTML = [];
 
 const readFileAsync = util.promisify(fs.readFile);
@@ -38,19 +41,19 @@ async function start(){
         });
     }
     sortEmployees();
-    console.log(employees);
+    
     let employeesHTML = await generateEmployeeHTML();
-    let mainHTML = await readFileAsync('./templates/main.html','utf8',data => data);
-    mainHTML.replace("##DATA",employeesHTML);
+    
+    let mainHTML = await readFileAsync('./templates/main.html','utf8');
+    mainHTML = mainHTML.replace("##DATA",employeesHTML);
 
-    writeFileAsync('team.html','utf8',mainHTML, err=>{
+    writeFileAsync('./output/team.html',mainHTML).then( err=>{
         if(err){
             console.log(err);
         }
     });
 
 }
-
 
 async function generateEmployeeHTML(){
     for(const employee of employees){
@@ -62,27 +65,20 @@ async function generateEmployeeHTML(){
 
 async function getEmployeeHTML(employee){
 
-    await html = readFileAsync(`./templates/${employee .role.toLoweCase()}.html`,'utf8',(err,data) =>{
-        if(err){
-            console.log(err);
-            return;
-        }
-        return data;
-    });
-
-    html.replace("@@NAME", employee.name);
-    html.replace("@@ID", employee.id);
-    html.replace("@@EMAIL",employee.email);
-
+    let html = await readFileAsync(`./templates/${employee.role.toLowerCase()}.html`,'utf8');
+    html = html.replace("@@NAME", employee.name)
+    .replace("@@ID", employee.id)
+    .replace(/@@EMAIL/g,employee.email);
+   
     switch(employee.role){
         case "Manager":
-            html.replace("@@OFFICE", employee.officeNumber);
+            html = html.replace("@@OFFICE", employee.officeNumber);
             break;
         case "Intern":
-            html.replace("@@SCHOOL", employee.school);
+            html = html.replace("@@SCHOOL", employee.school);
             break;
         case "Engineer":
-            html.replace("@@GITHUB", employee.github);
+            html = html.replace("@@GITHUB", employee.github);
         break;
     }
     return html;
