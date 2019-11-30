@@ -4,8 +4,13 @@ const Engineer = require('./lib/Engineer');
 const Intern = require('./lib/Intern');
 const fs = require('fs');
 const Questions = require('./lib/questions');
+const util = require('util');
 
-let employees = [];
+const employees = [];
+const employeeHTML = [];
+
+const readFileAsync = util.promisify(fs.readFile);
+const writeFileAsync = util.promisify(fs.writeFile);
 
 async function start(){
 
@@ -34,15 +39,60 @@ async function start(){
     }
     sortEmployees();
     console.log(employees);
+    let employeesHTML = await generateEmployeeHTML();
+    let mainHTML = await readFileAsync('./templates/main.html','utf8',data => data);
+    mainHTML.replace("##DATA",employeesHTML);
+
+    writeFileAsync('team.html','utf8',mainHTML, err=>{
+        if(err){
+            console.log(err);
+        }
+    });
 
 }
+
+
+async function generateEmployeeHTML(){
+    for(const employee of employees){
+        let html = await getEmployeeHTML(employee);
+        employeeHTML.push(html);
+    }
+    return employeeHTML.join("\n");
+}
+
+async function getEmployeeHTML(employee){
+
+    await html = readFileAsync(`./templates/${employee .role.toLoweCase()}.html`,'utf8',(err,data) =>{
+        if(err){
+            console.log(err);
+            return;
+        }
+        return data;
+    });
+
+    html.replace("@@NAME", employee.name);
+    html.replace("@@ID", employee.id);
+    html.replace("@@EMAIL",employee.email);
+
+    switch(employee.role){
+        case "Manager":
+            html.replace("@@OFFICE", employee.officeNumber);
+            break;
+        case "Intern":
+            html.replace("@@SCHOOL", employee.school);
+            break;
+        case "Engineer":
+            html.replace("@@GITHUB", employee.github);
+        break;
+    }
+    return html;
+}
+
 
 function sortEmployees(){
    
    employees.sort((a,b)=>{
-       if(a.role === "Manager" || b.role === "Manager"){
-           return -1;
-       }else if (a.role === b.role){
+       if (a.role === b.role){
            if(a.id > b.id){
                return 1;
            }else if(a.id < b.id){
@@ -50,6 +100,10 @@ function sortEmployees(){
            }else{
                return 0;
            }
+       }else if(a.role === "Manager"){
+           return -1;
+       }else if(b.role === "Manager"){
+           return 1;
        }else if(a.role === "Engineer" && b.role === "Intern"){
            return -1;
        }else {
